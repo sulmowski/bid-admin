@@ -1,0 +1,155 @@
+service: recorvery-frontend
+frameworkVersion: '3'
+
+plugins:
+  - serverless-plugin-scripts
+  - serverless-offline
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  region: eu-west-1
+  stage: dev
+  apiGateway:
+    shouldStartNameWithService: true
+  environment:
+    REGION: ${opt:region, self:provider.region}
+    STAGE: ${opt:stage, self:provider.stage}
+    SERVICE: ${self:service}
+    HOSTED_ZONE_ID: Z2RWC8HM6XH265
+    PREFIX: ${self:service}-${opt:stage, self:provider.stage}-${opt:region, self:provider.region}
+    SITE_BUCKET_NAME: ${self:provider.environment.PREFIX}-site
+    LOGS_BUCKET_NAME: ${self:provider.environment.PREFIX}-logs
+    WEBAPP_DOMAIN: ${self:service}-${opt:stage, self:provider.stage}.aws.sulmowski.eu
+    ACM_SSL: arn:aws:acm:us-east-1:749918991571:certificate/f62ab742-7af3-4d5f-8176-98bafe760527
+
+package:
+  patterns:
+    - '!**'
+    - 'lambdas/**'
+
+functions:
+  hello:
+    handler: lambdas/handler.hello
+
+resources:
+  Resources:
+    LogsWebAppBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:provider.environment.LOGS_BUCKET_NAME}
+        LifecycleConfiguration: 
+          Rules:
+          - Id: DeleteEverythingIn7Days
+            Status: Enabled
+            ExpirationInDays: 7
+            NoncurrentVersionExpirationInDays: 7
+
+    WebAppBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:provider.environment.SITE_BUCKET_NAME}
+        VersioningConfiguration:
+          Status: Enabled
+        LifecycleConfiguration: 
+          Rules:
+          - Id: DeleteVersionsIn7Days
+            Status: Enabled
+            NoncurrentVersionExpirationInDays: 7
+
+    WebAppBucketAccessPolicy:
+      Type: AWS::S3::BucketPolicy
+      Properties:
+        Bucket:
+          Ref: WebAppBucket
+        PolicyDocument:
+          Statement:
+            - Sid: PublicReadGetObjects
+              Effect: Allow
+              Principal:
+                AWS:
+                  - !Sub arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity ${webappCloudFrontOriginAccessIdentity}
+              Action:
+                - s3:GetObject
+              Resource: arn:aws:s3:::${self:provider.environment.SITE_BUCKET_NAME}/*
+
+    webappCloudFrontOriginAccessIdentity:
+      Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
+      Properties: 
+        CloudFrontOriginAccessIdentityConfig: 
+          Comment: webappCloudFrontOriginAccessIdentity
+
+    WebAppCloudFrontDistribution:
+      Type: AWS::CloudFront::Distribution
+      Properties:
+        DistributionConfig:
+          Origins:
+            - DomainName: !GetAtt WebAppBucket.RegionalDomainName
+              Id: ${self:service}-WebApp-${self:provider.environment.STAGE}
+              S3OriginConfig: 
+                OriginAccessIdentity: !Sub origin-access-identity/cloudfront/${webappCloudFrontOriginAccessIdentity}
+          Enabled: "true"
+          DefaultRootObject: index.html
+          PriceClass: PriceClass_All
+          HttpVersion: http2
+          IPV6Enabled: false
+          CustomErrorResponses:
+            - ErrorCachingMinTTL: 0
+              ErrorCode: 403
+              ResponseCode: 200
+              ResponsePagePath: /index.html
+          DefaultCacheBehavior: 
+            AllowedMethods: [GET, HEAD, OPTIONS]  
+            CachedMethods: [GET, HEAD]
+            Compress: true
+            DefaultTTL: 86400
+            ForwardedValues: 
+              Cookies: 
+                Forward: none
+              QueryString: false
+            MaxTTL: 31536000
+            MinTTL: 0
+            SmoothStreaming: false
+            CachePolicyId: !Ref CloudfrontCachePolicy
+            TargetOriginId: ${self:service}-WebApp-${self:provider.environment.STAGE} 
+            ViewerProtocolPolicy: redirect-to-https
+          Logging: 
+            Bucket: !GetAtt LogsWebAppBucket.DomainName
+            IncludeCookies: "false"
+            Prefix: "cloudfront-WebApp/"
+          Aliases: 
+            - ${self:provider.environment.WEBAPP_DOMAIN}
+          ViewerCertificate:
+            AcmCertificateArn: ${self:provider.environment.ACM_SSL}
+            MinimumProtocolVersion: TLSv1.2_2021
+            SslSupportMethod: sni-only
+    
+    CloudfrontCachePolicy:
+      Type: AWS::CloudFront::CachePolicy
+      Properties: 
+        CachePolicyConfig: 
+          DefaultTTL: 1
+          MaxTTL: 2
+          MinTTL: 0
+          Name: DefaultCachePolicy-${self:provider.environment.STAGE}
+          ParametersInCacheKeyAndForwardedToOrigin: 
+            CookiesConfig: 
+              CookieBehavior: none
+            EnableAcceptEncodingBrotli: true
+            EnableAcceptEncodingGzip: true
+            HeadersConfig: 
+              HeaderBehavior: none
+            QueryStringsConfig: 
+              QueryStringBehavior: none
+
+    WebAppFrontendRecordSet:
+      Type: AWS::Route53::RecordSet
+      Properties: 
+        AliasTarget: 
+          DNSName: !GetAtt WebAppCloudFrontDistribution.DomainName
+          EvaluateTargetHealth: false
+          HostedZoneId: Z2FDTNDATAQYW2
+        Comment: Recordset for ${self:provider.environment.WEBAPP_DOMAIN} ${self:provider.environment.STAGE} stage.
+        HostedZoneId: ${self:provider.environment.HOSTED_ZONE_ID}
+        Name: ${self:provider.environment.WEBAPP_DOMAIN}
+        Type: A

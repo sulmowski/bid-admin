@@ -1,0 +1,61 @@
+on:
+  push:
+    branches:
+      - master
+      - dev
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+    env:
+      PROJECTNAME: recorvery-frontend
+      REGION: eu-west-1
+    steps:
+
+      - name: Set environment variables
+        run: |
+          echo "GIT_SHA=${GITHUB_SHA}" >> $GITHUB_ENV
+          echo "GIT_BRANCH=${GITHUB_REF##*/}" >> $GITHUB_ENV
+
+      - name: Set variables
+        run: |
+          if [[ "GIT_BRANCH" == "master" ]]; then
+              echo "STAGE=prd" >> $GITHUB_ENV
+          else
+              echo "STAGE=${GIT_BRANCH}" >> $GITHUB_ENV
+          fi
+          
+
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: '16.x'
+      - uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.REGION }}
+
+      - name: Install dependencies
+        run: |
+          npm install -g serverless
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          npm install
+
+      # - name: Install Yarn
+      #   run: |
+      #     curl -sL https://dl.yarnpkg.com/debian/pubkey.gpg | gpg --dearmor | sudo tee /usr/share/keyrings/yarnkey.gpg >/dev/null
+      #     echo "deb [signed-by=/usr/share/keyrings/yarnkey.gpg] https://dl.yarnpkg.com/debian stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
+      #     sudo apt-get update && sudo apt-get install yarn
+
+      - name: DeployServerless
+        run: serverless deploy --stage ${{ env.STAGE }}
+      - name: DoctorServerless
+        run: serverless doctor
+      - name: BuildWebApp
+        run: |
+          cd site/
+          npm install
+
+          CI=false npm run build:${{ env.STAGE }}
+      - name: Publish
+        run: aws s3 sync site/build/ s3://${{ env.PROJECTNAME }}-${{ env.STAGE }}-${{ env.REGION }}-site/ --delete
