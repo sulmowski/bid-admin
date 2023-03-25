@@ -7,7 +7,7 @@ jobs:
   build-deploy:
     runs-on: ubuntu-latest
     env:
-      PROJECTNAME: recorvery-frontend
+      PROJECTNAME: bid-admin
       REGION: eu-west-1
     steps:
 

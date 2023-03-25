@@ -1,4 +1,4 @@
-service: recorvery-frontend
+service: bid-admin
 frameworkVersion: '3'
 
 plugins:

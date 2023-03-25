@@ -86,7 +86,7 @@ export default {
     
 
     PREPARED_DB: env.REACT_APP_PREPARED_DB ? env.REACT_APP_PREPARED_DB : "projectddb" + reactEnv,
-    DEFAULT_SOURCE_NAME: env.REACT_APP_DEFAULT_SOURCE_NAME ? env.REACT_APP_DEFAULT_SOURCE_NAME : "recorvery-frontend"
+    DEFAULT_SOURCE_NAME: env.REACT_APP_DEFAULT_SOURCE_NAME ? env.REACT_APP_DEFAULT_SOURCE_NAME : "bid-admin"
   },
 
 

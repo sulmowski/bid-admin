@@ -1,5 +1,5 @@
 {
-  "name": "recorvery-frontend",
+  "name": "bid-admin",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -8,14 +8,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/damians-pl/recorvery-frontend.git"
+    "url": "git+https://github.com/damians-pl/bid-admin.git"
   },
   "author": "Damian Sulmowski",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/damians-pl/recorvery-frontend/issues"
+    "url": "https://github.com/damians-pl/bid-admin/issues"
   },
-  "homepage": "https://github.com/damians-pl/recorvery-frontend#readme",
+  "homepage": "https://github.com/damians-pl/bid-admin#readme",
   "dependencies": {
     "react-json-prettify": "^0.2.0",
     "uuid": "^8.3.2"
