@@ -1,40 +1,24 @@
 import React from "react";
 import { Navbar, Nav, NavDropdown } from "react-bootstrap";
-import { Link } from "react-router-dom";
+// import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
-function Header({ language, handleLanguageChange }) {
+function Header() {
+  const { t } = useTranslation();
+
   return (
     <Navbar bg="light" expand="lg">
-      <Navbar.Brand>
-        <Link to="/">{language === "en" ? "React Site" : "Strona React"}</Link>
-      </Navbar.Brand>
+      <Navbar.Brand href="#home">{t("header.home")}</Navbar.Brand>
       <Navbar.Toggle aria-controls="basic-navbar-nav" />
       <Navbar.Collapse id="basic-navbar-nav">
         <Nav className="mr-auto">
-          <Nav.Link>
-            <Link to="/about">{language === "en" ? "About" : "O mnie"}</Link>
-          </Nav.Link>
-          <Nav.Link>
-            <Link to="/contact">
-              {language === "en" ? "Contact" : "Kontakt"}
-            </Link>
-          </Nav.Link>
+          <Nav.Link href="#about">{t("header.about")}</Nav.Link>
         </Nav>
-        <Nav>
-          <NavDropdown title={language ? language.toUpperCase() : ''}  id="basic-nav-dropdown">
-            <NavDropdown.Item onClick={handleLanguageChange} value="en">
-              EN
-            </NavDropdown.Item>
-            <NavDropdown.Item onClick={handleLanguageChange} value="pl">
-              PL
-            </NavDropdown.Item>
-          </NavDropdown>
-          <Nav.Link>
-            <Link to="/login">
-              {language === "en" ? "Log In" : "Zaloguj się"}
-            </Link>
-          </Nav.Link>
-        </Nav>
+        <NavDropdown title={t("header.contact")} id="basic-nav-dropdown">
+          <NavDropdown.Item href="#action/3.1">{t("header.contact.email")}</NavDropdown.Item>
+          <NavDropdown.Divider />
+          <NavDropdown.Item href="#action/3.2">{t("header.contact.phone")}</NavDropdown.Item>
+        </NavDropdown>
       </Navbar.Collapse>
     </Navbar>
   );
