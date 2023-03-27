@@ -1,10 +1,13 @@
 import React from "react";
-import { Button } from "react-bootstrap";
-import { Jumbotron } from 'react-bootstrap';
+import { Button, Container } from "react-bootstrap";
 
 function Home({ language }) {
   return (
-    <Jumbotron>
+    <Container
+      fluid
+      className="p-5 bg-light text-center text-lg-start"
+      style={{ minHeight: "100vh" }}
+    >
       <h1>{language === "en" ? "Welcome" : "Witaj"}</h1>
       <p>
         {language === "en"
@@ -14,7 +17,7 @@ function Home({ language }) {
       <Button variant="primary">
         {language === "en" ? "Learn more" : "Dowiedz się więcej"}
       </Button>
-    </Jumbotron>
+    </Container>
   );
 }
 
