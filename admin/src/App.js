@@ -14,6 +14,7 @@ function App() {
   const [language, setLanguage] = useState("en");
 
   const handleLanguageChange = (e) => {
+    console.log(e.target)
     setLanguage(e.target.value);
   };
 

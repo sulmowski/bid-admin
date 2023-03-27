@@ -21,7 +21,7 @@ function Header({ language, handleLanguageChange }) {
           </Nav.Link>
         </Nav>
         <Nav>
-          <NavDropdown title={language.toUpperCase()} id="basic-nav-dropdown">
+          <NavDropdown title={language ? language.toUpperCase() : ''}  id="basic-nav-dropdown">
             <NavDropdown.Item onClick={handleLanguageChange} value="en">
               EN
             </NavDropdown.Item>
