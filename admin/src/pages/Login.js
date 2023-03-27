@@ -25,3 +25,5 @@ function Login({ language }) {
     </Form>
   );
 }
+
+export default Login;

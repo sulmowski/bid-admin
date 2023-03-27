@@ -1,6 +1,6 @@
 import React from "react";
 import { Button } from "react-bootstrap";
-import Jumbotron from "react-bootstrap/Jumbotron";
+import { Jumbotron } from 'react-bootstrap';
 
 function Home({ language }) {
   return (
