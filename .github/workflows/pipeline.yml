@@ -2,7 +2,7 @@ on:
   push:
     branches:
       - master
-      - dev
+      - devvv
 jobs:
   build-deploy:
     runs-on: ubuntu-latest
